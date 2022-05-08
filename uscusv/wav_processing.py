@@ -16,11 +16,11 @@ def nb_outliers(data, m=2.):
 def get_tone_times(file_name, tone_freq=2000, wsize=2500, filter_N=20, threshold=50000, verbose=True):
     sfreq, data = wavfile.read(file_name)
 
-    dt = wsize / sfreq
+    dt = wsize / sfreq / 2
     freqs = mne.time_frequency.stftfreq(wsize=wsize, sfreq=sfreq)
     tf = mne.time_frequency.stft(data, wsize=wsize, verbose=verbose)
     tf = np.abs(tf.squeeze())
-    time = np.arange(0, dt * tf.shape[1], dt)
+    #time = np.arange(0, dt * tf.shape[1], dt)
 
     thresholded_sig = tf[freqs == tone_freq].squeeze() > threshold
     filtered_sig = filter_small_changes(thresholded_sig, N=filter_N)
