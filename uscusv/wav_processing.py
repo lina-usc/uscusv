@@ -13,13 +13,25 @@ def nb_outliers(data, m=2.):
     return np.sum(abs(data - np.mean(data)) > m * np.std(data))
 
 
+def blocked_stft(data, wsize, nb_wsize_max = 50000, verbose=True):
+  tfs = []
+  for offset in np.arange(0, len(data), nb_wsize_max*wsize):
+    if verbose:
+      print(f"Offset {offset} samples")
+
+    tf = mne.time_frequency.stft(data[offset:offset+nb_wsize_max*wsize], wsize=wsize)
+    tfs.append(np.abs(tf.squeeze()))
+
+  freqs = mne.time_frequency.stftfreq(wsize=wsize, sfreq=sfreq)
+
+  return freqs, np.concatenate(tfs, axis=1)
+
+
 def get_tone_times(file_name, tone_freq=2000, wsize=2500, filter_N=20, threshold=50000, verbose=True):
     sfreq, data = wavfile.read(file_name)
 
     dt = wsize / sfreq / 2
-    freqs = mne.time_frequency.stftfreq(wsize=wsize, sfreq=sfreq)
-    tf = mne.time_frequency.stft(data, wsize=wsize, verbose=verbose)
-    tf = np.abs(tf.squeeze())
+    freqs, tf = blocked_stft(data, wsize)
     #time = np.arange(0, dt * tf.shape[1], dt)
 
     thresholded_sig = tf[freqs == tone_freq].squeeze() > threshold
